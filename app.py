@@ -7,6 +7,7 @@ df = pd.read_csv("empleo_formal.csv")
 
 # App
 app = Dash(__name__)
+server = app.server
 app.title = "Empleo Formal Colombia"
 
 app.layout = html.Div([
