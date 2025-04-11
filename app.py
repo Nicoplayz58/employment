@@ -8,8 +8,40 @@ df = pd.read_csv("empleo_formal.csv")
 # App
 app = Dash(__name__)
 server = app.server
-
 app.title = "Empleo Formal Colombia"
+
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>{%title%}</title>
+        {%favicon%}
+        {%css%}
+        <style>
+            html, body {
+                background-color: #141627;
+                color: white;
+                margin: 0;
+                padding: 0;
+                font-family: Arial, sans-serif;
+            }
+            * {
+                box-sizing: border-box;
+            }
+        </style>
+    </head>
+    <body>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+'''
+
 
 app.layout = html.Div([
     html.H1("Dashboard Empleo Formal", style={"textAlign": "center", "color": "white"}),
