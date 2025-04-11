@@ -1,0 +1,12 @@
+# Ignorar notebooks y sus checkpoints
+*.ipynb
+.ipynb_checkpoints/
+
+# Ignorar el archivo de EDA
+Formal EDA*
+
+# Archivos temporales / basura general
+__pycache__/
+*.pyc
+.env
+.DS_Store
