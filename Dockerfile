@@ -9,4 +9,5 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8050
 
-CMD ["python", "app.py"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:$PORT", "app:server"]
+
