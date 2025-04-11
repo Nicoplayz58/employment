@@ -1,179 +1,76 @@
-from dash import Dash, dcc, html, Input, Output
+import streamlit as st
 import pandas as pd
 import plotly.express as px
-from dash.exceptions import PreventUpdate
 
 # Cargar datos
 df = pd.read_csv("empleo_formal.csv")
 
-# App
-app = Dash(__name__,suppress_callback_exceptions=True)
-server = app.server
-app.title = "Empleo Formal Colombia"
+st.set_page_config(page_title="Empleo Formal Colombia", layout="wide", page_icon="📊")
 
-app.index_string = '''
-<!DOCTYPE html>
-<html>
-    <head>
-        {%metas%}
-        <title>{%title%}</title>
-        {%favicon%}
-        {%css%}
-        <style>
-            html, body {
-                background-color: #141627;
-                color: white;
-                margin: 0;
-                padding: 0;
-                font-family: Arial, sans-serif;
-            }
-            * {
-                box-sizing: border-box;
-            }
-        </style>
-    </head>
-    <body>
-        {%app_entry%}
-        <footer>
-            {%config%}
-            {%scripts%}
-            {%renderer%}
-        </footer>
-    </body>
-</html>
-'''
-
-# Layout principal
-app.layout = html.Div([
-    html.H1("Dashboard Empleo Formal", style={"textAlign": "center", "color": "white"}),
-
-    dcc.Tabs(id="tabs", value="dashboard", children=[
-        dcc.Tab(label="📘 Contexto del problema", value="contexto",
-                style={"backgroundColor": "#2c2e4a", "color": "white"},
-                selected_style={"backgroundColor": "#4c4f75", "color": "white"}),
-
-        dcc.Tab(label="📊 Dashboard", value="dashboard",
-                style={"backgroundColor": "#2c2e4a", "color": "white"},
-                selected_style={"backgroundColor": "#4c4f75", "color": "white"})
-    ]),
-
-    html.Div(id="contenido")
-], style={"backgroundColor": "#141627", "padding": "20px", "fontFamily": "Arial"})
-
-
-@app.callback(
-    Output("contenido", "children"),
-    Input("tabs", "value")
+# Estilo
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #141627;
+        color: white;
+    }
+    .stApp {
+        background-color: #141627;
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
-def render_tab(tab):
-    if tab == "contexto":
-        return html.Div([
-            html.Div([
-                html.Div([
-                    html.H2("Contexto del problema", style={"color": "white", "marginBottom": "20px"}),
-                    html.P(
-                        "Este dashboard presenta un análisis del empleo formal en diferentes departamentos de Colombia. "
-                        "Permite visualizar el valor promedio registrado por departamento, analizar la distribución por categorías, "
-                        "y explorar la ubicación geográfica de los datos de manera interactiva. "
-                        "La finalidad es facilitar la comprensión de patrones y diferencias entre regiones.",
-                        style={"color": "white", "fontSize": "16px", "textAlign": "justify", "lineHeight": "1.7"}
-                    )
-                ], style={"width": "60%", "padding": "30px"}),
-        
-                html.Div([
-                    html.Img(
-                        src="https://cdn-icons-png.flaticon.com/512/1995/1995574.png",
-                        style={
-                            "width": "100%",
-                            "maxWidth": "250px",
-                            "margin": "auto",
-                            "display": "block",
-                            "filter": "drop-shadow(0 0 15px #00ffff)"
-                        }
-                    )
-                ], style={"width": "40%", "display": "flex", "justifyContent": "center", "alignItems": "center"})
-            ], style={
-                "display": "flex",
-                "flexDirection": "row",
-                "alignItems": "center",
-                "justifyContent": "center",
-                "maxWidth": "1000px",
-                "margin": "auto",
-                "minHeight": "65vh"  # <- clave para centrar respecto al contenido principal
-            })
-        ])
 
-     
-    elif tab == "dashboard":
-        return html.Div([
-            html.Div([
-                html.Label("Selecciona vista:", style={"color": "white", "fontSize": "18px", "marginBottom": "10px"}),
-                dcc.RadioItems(
-                    id="tipo_grafico",
-                    options=[
-                        {"label": "📊 Barras por Categoría", "value": "barras"},
-                        {"label": "📈 Boxplot por Categoría", "value": "box"},
-                        {"label": "🗺️ Mapa Colombia", "value": "mapa"}
-                    ],
-                    value="barras",
-                    labelStyle={"display": "block", "marginBottom": "10px", "cursor": "pointer"},
-                    inputStyle={"marginRight": "10px", "accentColor": "#00FFFF"}
-                )
-            ], style={"width": "20%", "padding": "20px", "display": "flex", "flexDirection": "column", "justifyContent": "center"}),
+# Sidebar
+st.sidebar.title("Navegación")
+opcion = st.sidebar.radio("Selecciona vista:", ["📘 Contexto del problema", "📊 Barras por Categoría", "📈 Boxplot", "🗺️ Mapa"])
 
-            html.Div([
-                dcc.Graph(id="grafico")
-            ], style={"width": "80%"})
-        ], style={"display": "flex", "flexDirection": "row", "alignItems": "center"})
+# Vista de contexto
+if opcion == "📘 Contexto del problema":
+    col1, col2 = st.columns([2, 1])
+    with col1:
+        st.markdown("## Contexto del problema")
+        st.markdown("""
+        Este dashboard presenta un análisis del empleo formal en diferentes departamentos de Colombia.  
+        Permite visualizar el valor promedio registrado por departamento, analizar la distribución por categorías,  
+        y explorar la ubicación geográfica de los datos de manera interactiva.
+        """)
+    with col2:
+        st.image("https://cdn-icons-png.flaticon.com/512/1995/1995574.png", width=250)
 
+# Gráfico de barras
+elif opcion == "📊 Barras por Categoría":
+    df_prom = df.groupby("Departamento")["Valor"].mean().reset_index()
+    fig = px.bar(df_prom, x="Departamento", y="Valor", title="Promedio del Valor por Departamento", color="Valor", color_continuous_scale="viridis")
+    st.plotly_chart(fig, use_container_width=True)
 
-@app.callback(
-    Output("grafico", "figure"),
-    Input("tipo_grafico", "value")
-)
-def actualizar_grafico(tipo):
-    if tipo is None:
-        raise PreventUpdate
+# Boxplot
+elif opcion == "📈 Boxplot":
+    fig = px.box(df, x="Categoría", y="Valor", title="Distribución de Valor por Categoría", color="Categoría")
+    st.plotly_chart(fig, use_container_width=True)
 
-    if tipo == "barras":
-        df_promedio = df.groupby("Departamento")["Valor"].mean().reset_index()
-        fig = px.bar(df_promedio, x="Departamento", y="Valor",
-                     title="Promedio del Valor por Departamento",
-                     color="Valor", color_continuous_scale="viridis")
-
-    elif tipo == "box":
-        fig = px.box(df, x="Categoría", y="Valor",
-                     title="Distribución de Valor por Categoría",
-                     color="Categoría")
-
-    else:
-        df_promedio = df.groupby("Departamento").agg({
-            "Valor": "mean",
-            "Latitud": "mean",
-            "Longitud": "mean"
-        }).reset_index()
-
-        fig = px.scatter_mapbox(
-            df_promedio,
-            lat="Latitud",
-            lon="Longitud",
-            color="Valor",
-            size="Valor",
-            hover_name="Departamento",
-            zoom=5,
-            height=650,
-            center={"lat": 5.5, "lon": -74.0},
-            mapbox_style="carto-darkmatter",
-            title="Promedio del Valor por Departamento"
-        )
-
-    fig.update_layout(paper_bgcolor="#141627", plot_bgcolor="#141627", font_color="white")
-    return fig
-
-
-import os
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port, debug=False)
-
+# Mapa
+elif opcion == "🗺️ Mapa":
+    df_prom = df.groupby("Departamento").agg({
+        "Valor": "mean",
+        "Latitud": "mean",
+        "Longitud": "mean"
+    }).reset_index()
+    
+    fig = px.scatter_mapbox(
+        df_prom,
+        lat="Latitud",
+        lon="Longitud",
+        color="Valor",
+        size="Valor",
+        hover_name="Departamento",
+        zoom=4.5,
+        height=650,
+        center={"lat": 4.5709, "lon": -74.2973},
+        mapbox_style="carto-darkmatter",
+        title="Promedio del Valor por Departamento"
+    )
+    st.plotly_chart(fig, use_container_width=True)
